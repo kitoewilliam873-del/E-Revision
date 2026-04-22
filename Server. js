@@ -1,0 +1,37 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.warn("MONGO_URI is not configured. API will run without a database connection.");
+} else {
+  mongoose
+    .connect(mongoUri)
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.error("MongoDB connection error:", err.message));
+}
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "E-Revision API is running",
+    routes: ["/api/auth/register", "/api/auth/login", "/api/materials"],
+  });
+});
+
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/materials", require("./routes/materials"));
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: "Server error" });
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
